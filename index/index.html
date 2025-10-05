@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e-DATA TRANSIT PBD Sk Kg Jawa Tawau</title>
+    <!-- Fonts and Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for analysis graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body { font-family: 'Exo 2', sans-serif; }
+        .view { display: none; }
+        .view.active { display: block; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px;}
+        ::-webkit-scrollbar-thumb:hover { background: #059669; }
+        /* Make table header sticky */
+        .sticky-header thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        /* Toast Notification */
+        #toast-notification {
+            transition: opacity 0.5s, transform 0.5s;
+        }
+    </style>
+</head>
+<body class="bg-green-50">
+
+    <div id="loading-overlay" class="fixed inset-0 bg-white/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="flex flex-col items-center text-center p-4">
+            <svg id="loading-spinner" class="animate-spin h-10 w-10 text-green-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p id="loading-text" class="mt-4 text-green-800 font-semibold"></p>
+        </div>
+    </div>
+
+     <!-- Toast Notification Container -->
+    <div id="toast-notification" class="fixed top-5 right-5 bg-green-600 text-white py-3 px-5 rounded-lg shadow-lg opacity-0 transform translate-x-full z-50">
+        <p id="toast-message"></p>
+    </div>
+
+
+    <div class="container mx-auto p-4 max-w-7xl">
+        <header class="text-center bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6 border-2 border-green-400">
+            <img src="https://i.postimg.cc/hjpkx5Wc/lencana-sekolah.png" alt="Logo Sekolah" class="mx-auto h-20 w-20 mb-4">
+            <h1 class="text-3xl font-bold text-green-900">e-DATA TRANSIT PBD</h1>
+            <p class="text-green-800 mt-1 font-medium">Sk Kg Jawa Tawau</p>
+        </header>
+
+        <!-- View: Login / Teacher Selection -->
+        <div id="login-view" class="view active">
+            <div class="bg-white p-8 rounded-lg shadow-md max-w-xl mx-auto">
+                <h2 class="text-2xl font-bold text-center text-green-800 mb-6">Sila Pilih Nama Guru</h2>
+                 <select id="teacher-select" class="form-select w-full p-3 border border-green-400 rounded-md shadow-sm transition duration-150 ease-in-out bg-white text-lg">
+                    <option selected disabled>-- Sila Pilih --</option>
+                    <option>Jumirah bt Jumadi</option><option>Nordin bin Hadim</option><option>Mazira binti Wahab</option><option>Ahidah Tamin</option><option>Alfian bin Haris</option><option>Elferanah binti Numan</option><option>Ernizah binti Shamsaadin</option><option>Fatmawati binti Ramli</option><option>Hasnah binti Sahiddin</option><option>Hasnah binti Hj. Rakib</option><option>Juhuria binti Bakri</option><option>Mohd Asrif bin Abd Samat</option><option>Mohd Ali bin Abd Rahman</option><option>Nazaratul Atikah binti Taslim Galli</option><option>Nor Ardhillah binti Najar</option><option>Nordianshah bin Ami</option><option>Nurhati binti Ambotang</option><option>Rafidah binti Abd Rahman</option><option>Hjh Ratna binti Saliman</option><option>Rusli bin Hasani</option><option>Sianti binti Rahim</option><option>Siew Chen@ Michelle Bibi</option><option>Siti Noridah binti Kasran</option><option>Sudirman bin Yappa</option><option>Sulaiman bin Sabaktullah</option><option>Hjh Suriana binti Rauipong</option><option>Syamsul Bahri bin Sabaruddin</option><option>Syed Abd Rahman bin Muhammad</option><option>Wan Nur Rohani binti Wan Idris</option><option>Hasmiyani Emma</option>
+                </select>
+                <button id="login-button" class="mt-6 w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition duration-300">Masuk</button>
+            </div>
+        </div>
+
+        <!-- View: Dashboard -->
+        <div id="dashboard-view" class="view">
+            <div class="p-6 bg-white rounded-lg shadow-md">
+                 <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h2 class="text-2xl font-bold text-green-800">Dashboard <span id="teacher-name-display" class="font-normal"></span></h2>
+                    <button id="logout-button" class="text-sm bg-red-500 text-white py-1 px-3 rounded-md hover:bg-red-600">Log Keluar</button>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div id="goto-record-btn" class="p-6 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 transition cursor-pointer flex flex-col items-center justify-center">
+                        <span class="text-5xl">📊</span>
+                        <h3 class="text-xl font-bold mt-2">Rekod Data Pukal</h3>
+                        <p class="text-center text-sm">Isi dan kemas kini TP murid mengikut kelas dan subjek.</p>
+                    </div>
+                     <div id="goto-analysis-btn" class="p-6 bg-purple-500 text-white rounded-lg shadow-lg hover:bg-purple-600 transition cursor-pointer flex flex-col items-center justify-center">
+                        <span class="text-5xl">📈</span>
+                        <h3 class="text-xl font-bold mt-2">Analisis & Sejarah</h3>
+                        <p class="text-center text-sm">Lihat laporan dan sejarah rekod murid.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Bulk Record -->
+        <div id="bulk-record-view" class="view">
+            <div class="p-6 bg-white rounded-lg shadow-md">
+                <button class="back-to-dashboard-btn mb-6 bg-gray-200 text-gray-800 py-1 px-4 rounded-md hover:bg-gray-300">⬅️ Kembali ke Dashboard</button>
+                <h2 class="text-2xl font-bold text-green-800 mb-4">Perekodan Data Pukal</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-gray-50 p-4 rounded-lg border mb-6">
+                    <div>
+                        <label for="bulk-class-select" class="block text-sm font-medium text-gray-700">Kelas</label>
+                        <select id="bulk-class-select" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm"></select>
+                    </div>
+                    <div>
+                        <label for="bulk-subject-select" class="block text-sm font-medium text-gray-700">Subjek</label>
+                        <select id="bulk-subject-select" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm"></select>
+                    </div>
+                    <div>
+                        <label for="bulk-date-select" class="block text-sm font-medium text-gray-700">Tarikh</label>
+                        <input type="date" id="bulk-date-select" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <button id="load-students-btn" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition">Papar Murid</button>
+                </div>
+                
+                <div id="bulk-record-table-container" class="max-h-[60vh] overflow-auto sticky-header">
+                    <!-- Bulk record table will be generated here -->
+                </div>
+                 <div id="save-all-btn-container" class="mt-6 text-right hidden">
+                    <button id="save-all-records-btn" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed">💾 Simpan Semua Rekod</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- View: Analysis & History -->
+        <div id="analysis-view" class="view">
+            <div class="p-6 bg-white rounded-lg shadow-md">
+                <button class="back-to-dashboard-btn mb-6 bg-gray-200 text-gray-800 py-1 px-4 rounded-md hover:bg-gray-300">⬅️ Kembali ke Dashboard</button>
+                <h2 class="text-2xl font-bold text-green-800 mb-4">Analisis & Sejarah Rekod</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-gray-50 p-4 rounded-lg border mb-6">
+                    <div>
+                        <label for="analysis-class-select" class="block text-sm font-medium text-gray-700">Kelas</label>
+                        <select id="analysis-class-select" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm"></select>
+                    </div>
+                    <div>
+                        <label for="analysis-subject-select" class="block text-sm font-medium text-gray-700">Subjek</label>
+                        <select id="analysis-subject-select" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm"></select>
+                    </div>
+                    <button id="load-history-btn" class="w-full bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition">Papar Sejarah</button>
+                </div>
+
+                <div id="export-buttons-container" class="mb-6 text-right hidden space-x-2">
+                    <button id="export-pdf-btn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition">📄 Eksport ke PDF</button>
+                    <button id="export-excel-btn" class="bg-green-700 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-800 transition">📊 Eksport ke Excel (CSV)</button>
+                </div>
+                
+                <div id="record-history-container" class="space-y-8">
+                    <!-- Historical records will be generated here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        // --- Firebase Configuration ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config)
+            : {
+                apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID",
+                storageBucket: "YOUR_STORAGE_BUCKET", messagingSenderId: "YOUR_MESSAGING_SENDER_ID", appId: "YOUR_APP_ID"
+            };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pbd-app';
+
+        // --- App State ---
+        let appState = {
+            currentView: 'login-view', selectedTeacher: null, userId: null,
+            historyDataCache: null, // To store fetched history for export
+        };
+
+        // --- Static Data ---
+        const classes = ["1UKM", "1UMS", "2UKM", "2UMS", "3UKM", "3UMS", "4UKM", "4UMS", "5UKM", "5UMS", "6UKM", "6UMS"];
+        const students = {
+            '1UKM': ["AHMAD DZAWIN BIN TAJAP", "ANUM MARDIHA BINTI MALIK", "AULIA SALSABILA BINTI MOHD JAN", "IFFAH QURRATU AIN BINTI SARDIN", "MAYA ALISHA BINTI ABDULLAH", "MUHAMMAD MAHDI BIN MARZUKI", "MUHAMMAD RAHMAT SYAABAN BIN SURAHMAN", "MUHAMMAD SOBIRIN ALMUZAQQI BIN ABDUL RAHMAN", "MUHAMMAD SYAUQI SAIFUDDIN BIN SAHRIL", "NUR AAIRA AQEELA BINTI MOHD. ALI", "NUR AISYAH BATRISYA BINTI NORAMIANSHAH", "NUR QISYA ATIQAH BINTI SUGENG", "QIANDRA NURAFEYYAH RIZQIYYA BINTI MOHD SOFIYAN", "SITI NUR SAFIYYAH BINTI MUH NURABDUL MANSUR", "SYAHMI SYAFIQ BIN SUHAIME", "NUR ADELIA IZARA BINTI ANDY REMY IHSAN"],
+            '1UMS': ["ANNUR MIKAYLA BINTI ABDULLAH", "ASSYAFIAH AMANIE BINTI MOHD ISHLAN", "HARRAZ BIN ASDAR", "IZZ FAIZ ANAQI BIN AZMAN", "MUHAMMAD AQIF AFIYAD BIN JAMALUDDIN", "MUHAMMAD NABIL NAIM BIN MASRAN", "MUHAMMAD RAWI BIN SUHARNO", "MUHAMMAD SYAFIQ AKMAL BIN ABDULLAH", "NUR AFFIYAH AMMANI BINTI ARDINATA", "NUR FAHDHILA AFIYAH BINTI ARSHAD", "NURUL HANAN NAZURAH BINTI HARTONO", "RASIEQAH QASEH BINTI AFZANIZAM AURICK", "SITI AISYAH RAMADHANI BINTI ABDULLAH", "SYAFIALYSHA ADELIA BINTI HINDRAH", "MUHAMMAD ZAWIR HANAN BIN JAMALI", "MUHAMMAD RAQIB BIN SABRI"],
+            '2UKM': ["AINUL AALIYA BINTI PAESAL", "ANINDYA ZAHRA BINTI TAMBIRIN", "AYRA FARZANA SYIFA BINTI MUHAMMAD 'ARIF", "FAIQ HARRAZ ADRIAN BIN MOHAMMAD", "HARRAZ HAIZAN BIN HARYONO", "IFFAH ZAIYANI DELISHA BINTI SARDIN", "MOHAMMAD FAIZ ASYRAF BIN MOHD NOR FAZLY", "MOHAMMAD NORIKRAM BIN JIPRI", "MUHAJIRIN BIN MULIYADI", "MUHAMMAD ADEEB BIN MUHAMAD TAUFIK", "MUHAMMAD DAIYAN BIN ROMA", "MUHAMMAD FATIH ILMAN BIN JUSMAN", "MUHAMMAD SHAH KHUZAIRI BIN MOHD HASZREEN", "MUHAMMAD SYAQIF RIZQALLAH BIN MUSTARI", "NUR ALEEYA QAISARA BINTI JAMA", "NUR HANA HUMAIRA BINTI JAMALI", "NURUL ASYIKIN BINTI ASLAM", "SYATIR FAQIH BIN SUPARDI", "WAN SYED AHMAD BIN MULYAMAN", "MUHAMMAD LUHAIDAN BIN MOHD HASREE"],
+            '2UMS': ["AHMAD WAIZ SOLIH BIN AHMAD JUBAEDI", "ASYA NAILA ADRIANNA BINTI ADY SUARNO", "DAYANG ALIA DELISHA BINTI GUNAIDI", "DAYANGKU ADZRA RAFA BINTI AG KU MARZUKI", "FELISYA ZAHRAH BINTI MD SYARAEP", "HAZMAN BIN ABDULLAH", "MARSHANDA BINTI ABDULLAH", "MOHAMAD SYAZLEESHAM FADZLY BIN SARIPUDDIN", "MOHAMMAD RIZQY RAMADHAN BIN MOHD AZIZI", "MOHAMMAD ZARUL ZAQUAN BIN ABDULLAH", "MUHAMMAD AKASYAH BIN MUHAMMAD AKIP", "MUHAMMAD AYMAN AKHTAR BIN MOHAMAD SOBRY", "MUHAMMAD DANIAL BIN MOHAMMAD AMIR", "MUHAMMAD FARHAN HISYAM BIN SUPARDI", "MUHAMMAD SYUQUR AIDAN BIN HAMSA", "NUR AZIATUL ADAWIA BINTI SABRI", "NUR FATHIYAH AMIRAH BINTI SARUDIN", "NUR NADIA FAIQAH BINTI MA'AROP", "NUR ZAHIRAH BINTI AMAT"],
+            '3UKM': ["AHMAD HARRAS NAUFAL BIN AHMAD RAHIM", "ALIM NAUFAL BIN BACO", "ANIS ALISHA BINTI RIDWAN", "FAZLI BIN ABDUL HAIL", "IMAN FIRDAUS BIN ABDULLAH", "IZZ KHAYLA FAIQIHAH BINTI AZMAN", "JUWAIRIYAH BINTI TAJAP", "KHAIZURAN KHALDUN BIN ASRAN", "LUTHFIA ZAHRA BINTI TAMBIRIN", "MUHAMAD NAIM AZFAR BIN SAHARUDDIN", "MUHAMMAD ABHAR BIN BAHAR", "MUHAMMAD BAQIR QARIZH BIN HAZLI", "MUHAMMAD FARIZ BIN ADAM", "MUHAMMAD SOLEH BIN ABDUL RAHMAN", "MUHAMMAD SYAFIQ BIN HERMAN", "NUR ARIANA NADIRA BINTI MAIMULIADI", "NUR ZAFIRAH AZZAHRA BINTI JAMALI", "NURAFIENZAHRA NAZIHA", "NURHANA BINTI ABDULLAH", "PUTRI ARIANA BINTI NASRUN", "UMMU DAMIYAH BINTI SABRAN", "YUSSUF QARDHAWI BIN NORDIANSHAH"],
+            '3UMS': ["ALISHA MAISARah BINTI SUDIRMAN", "AMAL HAYY BIN MUSA", "AULIA IZZATUNNIISA ZAHRA BINTI ADY SUARNO", "FITRIYAH HASANAH BINTI SUKARMAN", "HAFIZAH DAIEYAH BINTI JULEAN", "MIMI FATIN BINTI RAMLI", "MOHAMMAD SYAFIQ SYAZWAN BIN BASLAN", "MUHAMAD RAYYAN ADZAN BIN AFZANIZAM AURICK", "MUhammad AMMAR NAUFAL BIN ADDY ASMANDY", "MUHAMMAD FAYYADH ARRAYYAN BIN ABDULLAH", "MUHAMMAD FIRDAUS BIN ABDULLAH", "MUHAMMAD MAINAKA MUZAFFER BIN ABDULLAH", "NAJIEHA ANA BELLA BINTI JIPRI", "NUR AQISHA IKMAH BINTI ZARIS", "NUR FARISYAH AZWANIZ BINTI MOHD FAIRUL", "NUR NAJWA ASYILAH BINTI GIFFPIN", "NUR UMAIRAH BATRISYIA BINTI MUSTARI", "NURUL DALLIA ANIS BINTI HIRUDDIN", "RIZQAH NUR RAISHA BINTI SUTRISNO", "SITI NORSYAFIQAH NURAIN BINTI LAMASAH", "SITI QAMISYA BINTI MANSUR"],
+            '4UKM': ["ACHMAD ARSYAD SHOLIH BIN AHMAD JUBAEDI", "AHMAD AKMAL BIN ABDUL SALAM", "AQASH RAYYAN BIN ABDULLAH", "AYEESHA QASEH AFZAN BINTI ABDULLAH", "HAZLEN ARMEL AISYAH BINTI HENDRA", "MOHAMMAD FAUZI BIN FIRMAN", "MUHAMMAD FAHMI BIN ARBAIN", "MUHAMMAD HAIQAL BIN SUPARDI", "MUHAMMAD IZZHAR MUZAFFAR BIN SUKRI", "MUHAMMAD NOOR IKRAM BIN SABRI", "MUHAMMAD SHAYRIEL AFWAIZ BIN MOHD FAIRUL", "MUHAMMAD YUSUF FIRDAUS BIN HASSAN", "MUHAMMAD ZILL QAYYIM BIN RUSLEE", "NUR ADELIA ZAHRAH BINTI ABDULLAH", "NUR AISYAH NUHA BINTI SUGENG", "NUR ARISSA SAFFIYAH BINTI NORMANSAH", "NUR KHALISA RAMADHANI BINTI MOHD KAMIL", "NUR NASYRATUN MIKHAYLA BINTI MOHD. NASYRAH ASSOBAH", "NUR QALESYA SOFEA BINTI KAMARUL", "NUR RAUDHAH BAZLIAH BINTI MOHD PRIADI", "NUR SUHAINIE BINTI BAHARIN", "NURNADIYATUL YUSRA BINTI RUDI", "QALISHA SAFFIYAH BINTI IRMAN", "BALQISAH IRDINA BINTI ISMAIL"],
+            '4UMS': ["ARINI BINTI ARIFUDDIN", "ASSYIFATU HAIFA BINTI MOHD ISHLAN", "AWANGKU NAUFAL RIZQIN BIN AG KU MARZUKI", "AZHAR MUAZ BIN SUHARNO", "DIAN RAMADANI BINTI ABDU RASIT", "IZWANSYAH BIN SHUBANDRIO", "MOHAMMAD ADAM AIMAN SHAH BIN TAJUDDIN", "MUHAMMAD AQIL FAKHRULLAH BIN MUHAMAD TAUFIK", "MUHAMMAD DINIE LUTFIRAS BIN ASLAN", "MUHAMMAD FAZLIYANSYAH BIN MD SYARAEP", "MUHAMMAD KHALEEF BUKHARI BIN JIN JAAFAR", "MUHAMMAD MIRZA BUKHARI BIN MAHMUD", "MUHAMMAD RAIF NAUFAL BIN ZAIMAN", "MUHAMMAD ZAQWAN SAINI BIN RIDWAN", "NUR ALISHA SOFEA BINTI JAMA", "NUR IZZAHTUL BINTI KASIM", "NUR NADHIRAH BINTI MOHD RIZAL", "NUR NAZHATUL MARDHIAH BINTI MOHD ARMAN", "NUR QAISARA BINTI MESDI @ MASDI", "NUR SOFIYYA BINTI SENONG", "NUR SYUHADA BINTI JAAFAR", "NURKHAIRUNNISA BATRISYIA BINTI ABDULLAH", "PUTRI NUR IZZ ZAHIRAH BINTI YUSOF", "SYAFIE IDRAKI BIN SUPARDI"],
+            '5UKM': ["ABDUL HAKIM BIN SUHARNO", "AMMAR ASYRAAF BIN PAESAL", "ANIQSAH ASYRAAF QAID BIN ASDIANSAH", "AULIA MAISARAH BINTI ASRAN", "KHAZANATUL SYUHAIZAH HAFIEYAH BINTI RUDI", "MOHAMMAD AQIL AIMAN BIN HERMAN", "MOHAMMAD NIZAM BIN AMAT", "MUHAMAD AZIM DANISH BIN HAZLAN", "MUHAMAD AZZIKRY BIN BURhan", "MUHAMMAD AFHDAL BIN MAIMULIADI", "MUHAMMAD AQIL BIN JUFIKER", "MUHAMMAD BAZIL QAYYIM BIN HAZLI", "MUHAMMAD HAKIM BIN SABRI", "MUHAMMAD IZZUL HAQ BIN YUSOF", "NUR AIN AMANY BINTI MOHD NOR FAZLY", "NUR AISYAH BINTI ABDULLAH", "NUR ARNIA SHOLEHAH BINTI BAHAR", "NUR QALEESYA REDZUAN BINTI ABDULLAH", "NURUL FATIHAH BINTI ARUSIN", "NURUL NATASHA BINTI HIRUDDIN", "PUTERI ALIAA QISTINA DANIA BINTI ABIDIN", "QISTINA KHALISHAH BINTI HERMAN", "QISYA NAURAH AMMARA BINTI HERMKNG", "RAIHAN BIN RUZAIDI", "SARA ASSYFA BINTI ALIAS", "MUHAMMAD RAMADHAN SHAH BIN ABDULLAH"],
+            '5UMS': ["AFIQ NAIM BIN ABD KADIR", "AHMAD DANISH BIN SABRIMANSHAH", "AHMAD QHOSIM SOLEH BIN AHMAD JUBAEDI", "AISYAH NABILA BINTI JUFRIDIN", "AKMAL BIN MUHAMMAD AZMI", "FARAH SYAKIRAH UMAYRAH BINTI ABDULLAH", "MIKAIL BIN ABDUL HAIL", "MOHAMMAD FARREL ADRIAN BIN KAMARUL", "MOHAMMAD ISYAMUDIN BIN JAIS", "MOHAMMAD SHAWAL BIN SUMARDI", "MUHAMMAD AMMAR UZAIR BIN MUHAMMAD AKIP", "MUHAMMAD AZHARI BIN ASRI", "MUHAMMAD FAHIM BIN RENE", "MUHAMMAD HAFIY ZAKWAN BIN ABDULLAH", "MUHAMMAD IRFAN NAUFAL BIN HERRY ERYWAN SHAH", "MUHAMMAD RIZQ RAYYAN BIN SUTRISNO", "NELLA DANISHA BINTI ROMA", "NUR AISYAH UMAIRAH BINTI AHMAD RAHIM", "NUR ALISHA BINTI MOHAMMAD AMIR", "NUR AQILAH BINTI ASRIP", "NUR NASIRA BINTI NASRUDDIN", "NUR QHARNIEZA YUSRAH BINTI MH YUSUP", "NURUL FATIHAH ADREANA BINTI MOHAMMAD", "QISYA HUMAIRAH BINTI PAESAL", "SYAFIRA BALQISYAH BINTI ABDULLAH"],
+            '6UKM': ["ABDUL QAYYUM BIN MOHD KAMIL", "AIN ADIBAH BINTI MOHD NOR", "AIRITH RAYQAL BIN ZAIMAN", "AWANGKU ARYAN RAFIQI BIN AG KU MARZUKI", "IRDINA HUSNA BINTI SUKARMAN", "IZZ FIRASH RIZQIN BIN AZMAN", "JUMIATI BINTI TAJAP", "KEE ADIF SHAFIY BIN KEE HARMIMAZLIE", "LUQMAN BIN KASIM", "MOHAMMAD AZRUL BIN BAHARIN", "MUHAMAD TAQYUDDIN BIN MOHD EZAZI", "MUHAMMAD ASHRAF BIN MUHAMAD TAUFIK", "MUHAMMAD KHAIRUL FAHMIE BIN MOHD EDUWINSAH", "NOR HISYAM BIN JOKOSULISTIAWAN", "NUR DAMIA LUTFIYYAH BINTI MUH NURABDUL MANSUR", "NUR QASEH ALEYSSA BINTI MOHD RAZIF", "NUR QISSHA HANIE BINTI KISWADI", "NUR SYAZA MARDHIAH BINTI MOHD ARMAN", "NURUL HAZERA QALISYAH BINTI MOHD HAIREN", "SAFIYYAH SUHADA BINTI ABDULLAH", "SITI NUR UMAIRAH NAJWA BINTI SARUDIN", "SITI SUHAILA BINTI JIM", "SITI ZAHIRA BINTI ALIMUDDIN", "SUFFIAH BINTI YUSOP"],
+            '6UMS': ["AIRITH RAYFAL BIN ZAIMAN", "ATIQAH BINTI ABDULLAH", "DZUL HANAFI BIN RAMLI", "FAHRISH AFNIZHAM BIN ARSHAD", "JUMADI BIN ABDULLAH", "MOHAMAD IKMAL BIN RENE", "MOHAMAD KHUZAIRIL BIN ZAMRI", "MOHAMMAD ALFIAN SYAPUTRA BIN ABDULLAH", "MOHAMMAD SYAWAL BIN RULAM", "MUHAMMAD AFIF HAMEEZAN BIN SUKRI", "MUHAMMAD AHNAF HELMIE BIN HENDRA", "MUHAMMAD ANIEF FIRDAUS BIN REZAL", "MUHAMMAD DANISH BIN ROMA", "MUHAMMAD FATHURRAHMAN BIN HERMAN", "MUHAMMAD FAYRUZ HILMI BIN MOHD FAIZAL", "MUHAMMAD SHARIZ DANNY BIN ABDULLAH", "NATASYAH NUR IZARA BINTI BAHTIAR", "NUR AISYAH SHAHNIZAH BINTI ARSAD", "NUR DINIE ZAFIRAH BINTI ASLAN", "NUR RAHMADIA BINTI JAAFAR", "NUR SYUHADAH BINTI DASIMUN", "NURUL HAFIZAH BINTI HASRUDDIN", "NURUL IZZAH SAFIYYAH BINTI ROSLI", "NURUL SHUHANA BINTI RAMLI", "SYAFIQA BINTI ABDULLAH", "ZARRA REEZQY DZUELAIQHA BINTI ROBIN"]
+        };
+        const subjects = [
+            { name: "Bahasa Melayu", skills: ["Mendengar", "Bertutur", "Membaca", "Menulis"]},
+            { name: "Bahasa Inggeris", skills: ["Listening", "Speaking", "Reading", "Writing"]},
+            { name: "Matematik", skills: ["Nombor dan Operasi", "Sukatan dan Geometri", "Perkaitan dan Algebra", "Statistik dan Kebarangkalian"]},
+            { name: "Sains", skills: ["Sains Hayat", "Sains Fizikal", "Sains Bahan", "Bumi dan Angkasa", "Teknologi dan Kehidupan Lestari"]},
+            { name: "Pendidikan Agama Islam", skills: ["Al-Quran", "Hadis", "Akidah", "Ibadah", "Sirah", "Akhlak"]},
+            { name: "Sejarah", skills: ["Zaman Air Batu", "Zaman Prasejarah", "Kerajaan Alam Melayu", "Tokoh Terbilang", "Kemerdekaan"]},
+            { name: "Pendidikan Seni Visual", skills: ["Menggambar", "Membuat Corak dan Rekaan", "Membentuk dan Membuat Binaan", "Kraf Tradisional"]},
+            { name: "Pendidikan Muzik", skills: ["Nyanyian", "Permainan Alat Perkusi", "Gerakan Mengikut Muzik", "Apresiasi Muzik"]},
+            { name: "Pendidikan Jasmani dan Kesihatan", skills: ["Gimnastik Asas", "Pergerakan Berirama", "Kemahiran Olahraga Asas", "Kesihatan Diri dan Reproduktif"]},
+            { name: "Reka Bentuk dan Teknologi", skills: ["Keselamatan Bengkel", "Penghasilan Projek", "Asas Teknologi", "Reka Bentuk Makanan"]}
+        ];
+
+        // --- UI Navigation & Feedback ---
+        function navigateTo(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            appState.currentView = viewId;
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast-notification');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            toast.className = 'fixed top-5 right-5 text-white py-3 px-5 rounded-lg shadow-lg opacity-0 transform translate-x-full z-50'; // Reset classes
+            toast.classList.add(isError ? 'bg-red-600' : 'bg-green-600');
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('opacity-0', 'translate-x-full');
+                toast.classList.add('opacity-100', 'translate-x-0');
+            }, 100);
+
+            // Animate out
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-x-0');
+                toast.classList.add('opacity-0', 'translate-x-full');
+            }, isError ? 8000 : 3000); // Linger longer for errors
+        }
+
+        // --- Rendering Functions ---
+        function renderDashboard() {
+            document.getElementById('teacher-name-display').textContent = `- ${appState.selectedTeacher}`;
+        }
+        
+        function renderBulkRecordView() {
+            const classSelect = document.getElementById('bulk-class-select');
+            const subjectSelect = document.getElementById('bulk-subject-select');
+            classSelect.innerHTML = '<option selected disabled>-- Pilih Kelas --</option>';
+            subjectSelect.innerHTML = '<option selected disabled>-- Pilih Subjek --</option>';
+            
+            classes.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c; opt.textContent = c;
+                classSelect.appendChild(opt);
+            });
+            subjects.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.name; opt.textContent = s.name;
+                subjectSelect.appendChild(opt);
+            });
+            document.getElementById('bulk-date-select').valueAsDate = new Date();
+            document.getElementById('bulk-record-table-container').innerHTML = '';
+            document.getElementById('save-all-btn-container').classList.add('hidden');
+        }
+
+        async function renderBulkRecordTable() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            loadingText.textContent = "Memuatkan Data Murid...";
+            loadingOverlay.classList.remove('hidden');
+
+            const className = document.getElementById('bulk-class-select').value;
+            const subjectName = document.getElementById('bulk-subject-select').value;
+            const date = document.getElementById('bulk-date-select').value;
+            
+            if (!className || !subjectName || !date || className.includes("Pilih") || subjectName.includes("Pilih")) {
+                alert("Sila pilih kelas, subjek, dan tarikh.");
+                loadingOverlay.classList.add('hidden');
+                return;
+            }
+
+            const subject = subjects.find(s => s.name === subjectName);
+            const studentList = students[className] || [];
+            const container = document.getElementById('bulk-record-table-container');
+
+            const dailyRecord = await fetchDailyRecord(className, subjectName, date);
+
+            let tableHTML = `<table class="min-w-full bg-white border"><thead class="bg-green-200"><tr>
+                <th class="py-2 px-3 text-left w-1/4">Nama Murid</th>`;
+            subject.skills.forEach(skill => tableHTML += `<th class="py-2 px-2 text-center text-sm">${skill}</th>`);
+            tableHTML += `</tr></thead><tbody>`;
+
+            for (const studentName of studentList) {
+                const studentRecords = dailyRecord ? dailyRecord[studentName] : null;
+                tableHTML += `<tr class="border-b hover:bg-green-50" data-student-name="${studentName}">
+                    <td class="py-2 px-3 font-medium text-sm">${studentName}</td>`;
+                subject.skills.forEach(skill => {
+                    const tpValue = studentRecords && studentRecords.skills[skill] ? studentRecords.skills[skill].tp : "";
+                    tableHTML += `<td class="py-1 px-2 text-center">
+                        <select class="tp-select w-full p-1 border rounded-md text-sm" data-skill="${skill}">
+                            <option value="" ${tpValue === "" ? 'selected' : ''}>-</option>
+                            <option ${tpValue === 'TP1' ? 'selected' : ''}>TP1</option>
+                            <option ${tpValue === 'TP2' ? 'selected' : ''}>TP2</option>
+                            <option ${tpValue === 'TP3' ? 'selected' : ''}>TP3</option>
+                            <option ${tpValue === 'TP4' ? 'selected' : ''}>TP4</option>
+                            <option ${tpValue === 'TP5' ? 'selected' : ''}>TP5</option>
+                            <option ${tpValue === 'TP6' ? 'selected' : ''}>TP6</option>
+                        </select>
+                    </td>`;
+                });
+                tableHTML += `</tr>`;
+            }
+            tableHTML += `</tbody></table>`;
+            container.innerHTML = tableHTML;
+            document.getElementById('save-all-btn-container').classList.remove('hidden');
+            loadingOverlay.classList.add('hidden');
+        }
+        
+        function renderAnalysisView() {
+            const classSelect = document.getElementById('analysis-class-select');
+            const subjectSelect = document.getElementById('analysis-subject-select');
+            classSelect.innerHTML = '<option selected disabled>-- Pilih Kelas --</option>';
+            subjectSelect.innerHTML = '<option selected disabled>-- Pilih Subjek --</option>';
+            
+            classes.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c; opt.textContent = c;
+                classSelect.appendChild(opt);
+            });
+            subjects.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.name; opt.textContent = s.name;
+                subjectSelect.appendChild(opt);
+            });
+            document.getElementById('record-history-container').innerHTML = '';
+            document.getElementById('export-buttons-container').classList.add('hidden');
+        }
+        
+        async function fetchAndDisplayHistory() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            loadingText.textContent = "Memuatkan Sejarah Rekod...";
+            loadingOverlay.classList.remove('hidden');
+            document.getElementById('export-buttons-container').classList.add('hidden');
+            appState.historyDataCache = null;
+
+            const className = document.getElementById('analysis-class-select').value;
+            const subjectName = document.getElementById('analysis-subject-select').value;
+
+            if (!className || !subjectName || className.includes("Pilih") || subjectName.includes("Pilih")) {
+                alert("Sila pilih kelas dan subjek.");
+                loadingOverlay.classList.add('hidden');
+                return;
+            }
+            
+            const subject = subjects.find(s => s.name === subjectName);
+            const studentList = students[className] || [];
+            const container = document.getElementById('record-history-container');
+            container.innerHTML = '';
+
+            const allDailyRecords = await fetchAllDailyRecords(className, subjectName);
+            const studentHistory = {};
+            studentList.forEach(name => studentHistory[name] = []);
+
+            allDailyRecords.forEach(dailyDoc => {
+                const date = dailyDoc.id;
+                const studentRecords = dailyDoc.data;
+                for (const studentName in studentRecords) {
+                    if (studentHistory[studentName]) {
+                        studentHistory[studentName].push({ date: date, skills: studentRecords[studentName].skills });
+                    }
+                }
+            });
+
+            let allHistoryDataForExport = [];
+            for (const studentName of studentList) {
+                const records = studentHistory[studentName];
+                const studentContainer = document.createElement('div');
+                studentContainer.className = "border rounded-lg p-4 mb-4 bg-white shadow";
+                let studentHTML = `<h3 class="text-lg font-bold text-green-800 mb-2">${studentName}</h3>`;
+
+                if (records && records.length > 0) {
+                    records.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    allHistoryDataForExport.push({ studentName, records });
+
+                    studentHTML += `<div class="overflow-x-auto"><table class="min-w-full bg-white text-sm">
+                        <thead class="bg-gray-100"><tr><th class="py-2 px-2 text-left">Tarikh</th>`;
+                    subject.skills.forEach(skill => studentHTML += `<th class="py-2 px-2 text-center">${skill}</th>`);
+                    studentHTML += `</tr></thead><tbody>`;
+
+                    records.forEach(record => {
+                        const d = new Date(record.date);
+                        const formattedDate = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+                        studentHTML += `<tr class="border-t"><td class="py-2 px-2 font-medium">${formattedDate}</td>`;
+                        subject.skills.forEach(skill => {
+                            studentHTML += `<td class="py-2 px-2 text-center">${record.skills[skill] ? record.skills[skill].tp : '-'}</td>`;
+                        });
+                        studentHTML += `</tr>`;
+                    });
+                    studentHTML += `</tbody></table></div>`;
+                } else {
+                    studentHTML += `<p class="text-gray-500 text-sm">Tiada rekod ditemui untuk subjek ini.</p>`;
+                }
+                studentContainer.innerHTML = studentHTML;
+                container.appendChild(studentContainer);
+            }
+
+            if(allHistoryDataForExport.length > 0){
+                appState.historyDataCache = { className, subjectName, subject, data: allHistoryDataForExport };
+                document.getElementById('export-buttons-container').classList.remove('hidden');
+            }
+            loadingOverlay.classList.add('hidden');
+        }
+
+        // --- Firebase Functions (OPTIMIZED) ---
+        async function fetchDailyRecord(className, subjectName, date) {
+            const docRef = doc(db, `artifacts/${appId}/public/data/daily_records/${className}/${subjectName}`, date);
+            try {
+                const docSnap = await getDoc(docRef);
+                return docSnap.exists() ? docSnap.data() : null;
+            } catch (error) { console.error("Error fetching daily record:", error); return null; }
+        }
+
+        async function fetchAllDailyRecords(className, subjectName) {
+            const records = [];
+            try {
+                const recordsCollectionRef = collection(db, `artifacts/${appId}/public/data/daily_records/${className}/${subjectName}`);
+                const querySnapshot = await getDocs(recordsCollectionRef);
+                querySnapshot.forEach(doc => records.push({ id: doc.id, data: doc.data() }));
+            } catch (error) { console.error("Error fetching all daily records:", error); }
+            return records;
+        }
+
+        async function saveAllRecords() {
+            const saveButton = document.getElementById('save-all-records-btn');
+            saveButton.disabled = true;
+            saveButton.textContent = "Menyimpan...";
+
+            const className = document.getElementById('bulk-class-select').value;
+            const subjectName = document.getElementById('bulk-subject-select').value;
+            const date = document.getElementById('bulk-date-select').value;
+
+            const dailyRecordData = {};
+            let hasAnyData = false;
+
+            document.querySelectorAll('#bulk-record-table-container tbody tr').forEach(row => {
+                const studentName = row.dataset.studentName;
+                const studentRecord = { teacher: appState.selectedTeacher, skills: {} };
+                let hasStudentData = false;
+                row.querySelectorAll('select.tp-select').forEach(select => {
+                    if (select.value) {
+                        studentRecord.skills[select.dataset.skill] = { tp: select.value };
+                        hasStudentData = true;
+                    }
+                });
+                if (hasStudentData) {
+                    dailyRecordData[studentName] = studentRecord;
+                    hasAnyData = true;
+                }
+            });
+
+            if (!hasAnyData) {
+                showToast("Tiada data baharu untuk disimpan.", true);
+                saveButton.disabled = false;
+                saveButton.innerHTML = "💾 Simpan Semua Rekod";
+                return;
+            }
+
+            const docRef = doc(db, `artifacts/${appId}/public/data/daily_records/${className}/${subjectName}`, date);
+            const saveOperation = setDoc(docRef, dailyRecordData);
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 20000));
+
+            try {
+                await Promise.race([saveOperation, timeoutPromise]);
+                showToast("✔️ Rekod Berjaya Disimpan!");
+            } catch (error) {
+                console.error("RALAT KETIKA MENYIMPAN:", error);
+                let errorMessage = "Gagal menyimpan rekod. Sila cuba lagi.";
+                if (error.message === "Timeout") {
+                    errorMessage = "Operasi tamat masa. Periksa sambungan internet anda.";
+                }
+                showToast(`❌ ${errorMessage}`, true);
+            } finally {
+                saveButton.disabled = false;
+                saveButton.innerHTML = "💾 Simpan Semua Rekod";
+            }
+        }
+        
+        // --- Export Functions ---
+        function exportToCSV() {
+            if (!appState.historyDataCache) { alert("Sila paparkan sejarah terlebih dahulu."); return; }
+            const { className, subjectName, subject, data } = appState.historyDataCache;
+            let csvContent = "data:text/csv;charset=utf-8,";
+            const headers = ["Nama Murid", "Tarikh", ...subject.skills];
+            csvContent += headers.join(",") + "\r\n";
+            data.forEach(({ studentName, records }) => {
+                records.forEach(record => {
+                    const date = new Date(record.date);
+                    const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+                    let row = [`"${studentName}"`, `"${formattedDate}"`];
+                    subject.skills.forEach(skill => row.push(`"${record.skills[skill] ? record.skills[skill].tp : ''}"`));
+                    csvContent += row.join(",") + "\r\n";
+                });
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `laporan_pbd_${className}_${subjectName}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportToPDF() {
+            if (!appState.historyDataCache) { alert("Sila paparkan sejarah terlebih dahulu."); return; }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const { className, subjectName, subject, data } = appState.historyDataCache;
+            doc.text(`Laporan Transit PBD`, 14, 16);
+            doc.setFontSize(12);
+            doc.text(`Kelas: ${className}`, 14, 22);
+            doc.text(`Subjek: ${subjectName}`, 14, 28);
+            let currentY = 35;
+            data.forEach(({ studentName, records }) => {
+                if (currentY > 260) { doc.addPage(); currentY = 20; }
+                doc.setFontSize(11);
+                doc.text(studentName, 14, currentY);
+                currentY += 2;
+                const tableHead = [['Tarikh', ...subject.skills]];
+                const tableBody = records.map(record => {
+                    const date = new Date(record.date);
+                    const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+                    const row = [formattedDate];
+                    subject.skills.forEach(skill => row.push(record.skills[skill] ? record.skills[skill].tp : '-'));
+                    return row;
+                });
+                doc.autoTable({
+                    head: tableHead, body: tableBody, startY: currentY, theme: 'grid',
+                    headStyles: { fillColor: [22, 160, 133] }, styles: { fontSize: 8 },
+                });
+                currentY = doc.autoTable.previous.finalY + 10;
+            });
+            doc.save(`laporan_pbd_${className}_${subjectName}.pdf`);
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('login-button').addEventListener('click', () => {
+            const teacherSelect = document.getElementById('teacher-select');
+            if (teacherSelect.selectedIndex > 0) {
+                appState.selectedTeacher = teacherSelect.value;
+                renderDashboard();
+                navigateTo('dashboard-view');
+            } else {
+                alert("Sila pilih nama guru.");
+            }
+        });
+        document.getElementById('logout-button').addEventListener('click', () => navigateTo('login-view'));
+        document.querySelectorAll('.back-to-dashboard-btn').forEach(btn => btn.addEventListener('click', () => navigateTo('dashboard-view')));
+        document.getElementById('goto-record-btn').addEventListener('click', () => { renderBulkRecordView(); navigateTo('bulk-record-view'); });
+        document.getElementById('goto-analysis-btn').addEventListener('click', () => { renderAnalysisView(); navigateTo('analysis-view'); });
+        document.getElementById('load-students-btn').addEventListener('click', renderBulkRecordTable);
+        document.getElementById('save-all-records-btn').addEventListener('click', saveAllRecords);
+        document.getElementById('load-history-btn').addEventListener('click', fetchAndDisplayHistory);
+        document.getElementById('export-pdf-btn').addEventListener('click', exportToPDF);
+        document.getElementById('export-excel-btn').addEventListener('click', exportToCSV);
+
+        // --- App Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            loadingOverlay.classList.remove('hidden');
+            loadingText.textContent = "Menyambung ke Pelayan...";
+            try {
+                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) { console.error("Authentication failed:", error); }
+            onAuthStateChanged(auth, (user) => {
+                if (user) { appState.userId = user.uid; }
+                loadingOverlay.classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
+
