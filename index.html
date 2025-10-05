@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTaskmate - Rekod Tugasan Murid</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(107, 114, 128, 0.1), transparent 35%),
+                radial-gradient(circle at 85% 30%, rgba(55, 65, 81, 0.1), transparent 40%);
+        }
+        .glassmorphism {
+            background: rgba(31, 41, 55, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .title-text { color: #f9fafb; }
+        .action-button {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px 0 rgba(14, 165, 233, 0.3);
+        }
+        .action-button:hover {
+            box-shadow: 0 6px 20px 0 rgba(14, 165, 233, 0.4);
+            transform: translateY(-2px);
+        }
+        .task-item-completed .task-text { text-decoration: line-through; }
+        .custom-checkbox:checked {
+            background-color: #0ea5e9;
+            border-color: #0ea5e9;
+        }
+        .custom-checkbox:checked::before {
+            content: '✔';
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+        }
+        .custom-checkbox:disabled {
+            cursor: not-allowed;
+            border-color: #4b5563;
+            background-color: #374151;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #374151; }
+        ::-webkit-scrollbar-thumb {
+            background: #38bdf8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: #0ea5e9; }
+        #chat-body { scroll-behavior: smooth; }
+        .chat-message { max-width: 80%; }
+        .chat-message.sent {
+            margin-left: auto;
+            background-color: #0c4a6e;
+        }
+        .chat-message.received {
+            margin-right: auto;
+            background-color: #374151;
+        }
+        /* Custom styles for date input */
+        input[type="date"] {
+            position: relative;
+            color-scheme: dark; /* Helps style the native picker in dark mode */
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            border-radius: 4px;
+            margin-right: 2px;
+            opacity: 0.8;
+            filter: invert(1); /* Makes the calendar icon white */
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-200 p-4 sm:p-6 md:p-8">
+
+    <!-- Role Selection Overlay -->
+    <div id="role-selection-overlay" class="fixed inset-0 bg-gray-900/90 backdrop-blur-md flex flex-col items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="text-center">
+            <h2 class="text-4xl font-bold text-white mb-2">Selamat Datang ke MyTaskmate</h2>
+            <p class="text-sky-300 text-lg mb-8">Sila pilih paparan anda.</p>
+            <div id="role-choice-buttons" class="flex flex-col sm:flex-row gap-4">
+                <button id="guru-btn" class="w-full sm:w-48 bg-sky-500 text-white font-bold py-4 px-6 rounded-lg text-xl action-button">👨‍🏫 Guru</button>
+                <button id="murid-btn" class="w-full sm:w-48 bg-teal-500 text-white font-bold py-4 px-6 rounded-lg text-xl action-button" style="box-shadow: 0 4px 14px 0 rgba(20, 184, 166, 0.3);">🧑‍🎓 Murid</button>
+            </div>
+
+            <!-- Teacher Login Form -->
+            <div id="teacher-selection-div" class="hidden mt-6 text-left w-full max-w-sm mx-auto">
+                 <label for="teacher-login-select" class="block mb-2 text-sm font-medium text-sky-300">Pilih Nama Anda</label>
+                 <select id="teacher-login-select" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition mb-4">
+                     <option value="" disabled selected>-- Sila Pilih Nama Guru --</option>
+                     <option value="Jumirah bt Jumadi">Jumirah bt Jumadi</option>
+                     <option value="Nordin bin Hadim">Nordin bin Hadim</option>
+                     <option value="Mazira binti Wahab">Mazira binti Wahab</option>
+                     <option value="Ahidah Tamin">Ahidah Tamin</option>
+                     <option value="Alfian bin Haris">Alfian bin Haris</option>
+                     <option value="Elferanah binti Numan">Elferanah binti Numan</option>
+                     <option value="Ernizah binti Shamsaadin">Ernizah binti Shamsaadin</option>
+                     <option value="Fatmawati binti Ramli">Fatmawati binti Ramli</option>
+                     <option value="Hasnah binti Sahiddin">Hasnah binti Sahiddin</option>
+                     <option value="Hasnah binti Hj. Rakib">Hasnah binti Hj. Rakib</option>
+                     <option value="Juhuria binti Bakri">Juhuria binti Bakri</option>
+                     <option value="Mohd Asrif bin Abd Samat">Mohd Asrif bin Abd Samat</option>
+                     <option value="Mohd Ali bin Abd Rahman">Mohd Ali bin Abd Rahman</option>
+                     <option value="Nazaratul Atikah binti Taslim Galli">Nazaratul Atikah binti Taslim Galli</option>
+                     <option value="Nor Ardhillah binti Najar">Nor Ardhillah binti Najar</option>
+                     <option value="Nordianshah bin Ami">Nordianshah bin Ami</option>
+                     <option value="Nurhati binti Ambotang">Nurhati binti Ambotang</option>
+                     <option value="Rafidah binti Abd Rahman">Rafidah binti Abd Rahman</option>
+                     <option value="Hjh Ratna binti Saliman">Hjh Ratna binti Saliman</option>
+                     <option value="Rusli bin Hasani">Rusli bin Hasani</option>
+                     <option value="Sianti binti Rahim">Sianti binti Rahim</option>
+                     <option value="Siew Chen@ Michelle Bibi">Siew Chen@ Michelle Bibi</option>
+                     <option value="Siti Noridah binti Kasran">Siti Noridah binti Kasran</option>
+                     <option value="Sudirman bin Yappa">Sudirman bin Yappa</option>
+                     <option value="Sulaiman bin Sabaktullah">Sulaiman bin Sabaktullah</option>
+                     <option value="Hjh Suriana binti Rauipong">Hjh Suriana binti Rauipong</option>
+                     <option value="Syamsul Bahri bin Sabaruddin">Syamsul Bahri bin Sabaruddin</option>
+                     <option value="Syed Abd Rahman bin Muhammad">Syed Abd Rahman bin Muhammad</option>
+                     <option value="Wan Nur Rohani binti Wan Idris">Wan Nur Rohani binti Wan Idris</option>
+                     <option value="Hasmiyani Emma">Hasmiyani Emma</option>
+                 </select>
+                 <button id="teacher-login-btn" class="w-full bg-sky-500 text-white font-bold py-3 px-4 rounded-lg action-button disabled:opacity-50" disabled>Masuk</button>
+            </div>
+
+            <!-- Student Login Form -->
+            <div id="student-selection-div" class="hidden mt-6 text-left w-full max-w-sm mx-auto">
+                 <label for="student-login-class-select" class="block mb-2 text-sm font-medium text-teal-300">Pilih Kelas Anda</label>
+                 <select id="student-login-class-select" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition mb-4">
+                     <option value="" disabled selected>-- Sila Pilih Kelas --</option>
+                     <option value="1 UKM">1 UKM</option>
+                     <option value="1 UMS">1 UMS</option>
+                     <option value="2 UKM">2 UKM</option>
+                     <option value="2 UMS">2 UMS</option>
+                     <option value="3 UKM">3 UKM</option>
+                     <option value="3 UMS">3 UMS</option>
+                     <option value="4 UKM">4 UKM</option>
+                     <option value="4 UMS">4 UMS</option>
+                     <option value="5 UKM">5 UKM</option>
+                     <option value="5 UMS">5 UMS</option>
+                     <option value="6 UKM">6 UKM</option>
+                     <option value="6 UMS">6 UMS</option>
+                 </select>
+
+                 <div id="student-name-login-wrapper" class="hidden mb-4">
+                    <label for="student-login-name-select" class="block mb-2 text-sm font-medium text-teal-300">Pilih Nama Anda</label>
+                    <select id="student-login-name-select" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition">
+                        <!-- Names will be populated here -->
+                    </select>
+                </div>
+
+                 <button id="student-login-btn" class="w-full bg-teal-500 text-white font-bold py-3 px-4 rounded-lg action-button disabled:opacity-50 disabled:cursor-not-allowed" disabled style="box-shadow: 0 4px 14px 0 rgba(20, 184, 166, 0.3);">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div class="w-full max-w-7xl mx-auto">
+        <header class="text-center mb-8 relative">
+             <button id="home-btn" class="absolute top-0 left-0 bg-gray-600 hover:bg-gray-500 text-white font-bold p-2 rounded-full hidden action-button flex flex-col items-center justify-center h-16 w-16" style="box-shadow: 0 4px 14px 0 rgba(107, 114, 128, 0.3);">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span class="text-xs font-semibold mt-1">HOME</span>
+            </button>
+            <h1 class="text-5xl md:text-6xl font-bold title-text tracking-wider">MyTaskmate 🤖</h1>
+            <p class="text-sky-400 mt-2">Your Smart Study Buddy</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <!-- Left Column: Task Manager -->
+            <div class="lg:col-span-3">
+                <!-- Form to Add New Task (Guru view only) -->
+                <div id="task-form-container" class="glassmorphism p-6 rounded-2xl mb-8 shadow-lg">
+                    <form id="task-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                        <div>
+                            <label for="teacher-name" class="block mb-2 text-sm font-medium text-sky-300">Nama Guru</label>
+                            <select id="teacher-name" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition" required>
+                                <option value="" disabled selected>Pilih Nama Guru</option>
+                                <option value="Jumirah bt Jumadi">Jumirah bt Jumadi</option>
+                                <option value="Nordin bin Hadim">Nordin bin Hadim</option>
+                                <option value="Mazira binti Wahab">Mazira binti Wahab</option>
+                                <option value="Ahidah Tamin">Ahidah Tamin</option>
+                                <option value="Alfian bin Haris">Alfian bin Haris</option>
+                                <option value="Elferanah binti Numan">Elferanah binti Numan</option>
+                                <option value="Ernizah binti Shamsaadin">Ernizah binti Shamsaadin</option>
+                                <option value="Fatmawati binti Ramli">Fatmawati binti Ramli</option>
+                                <option value="Hasnah binti Sahiddin">Hasnah binti Sahiddin</option>
+                                <option value="Hasnah binti Hj. Rakib">Hasnah binti Hj. Rakib</option>
+                                <option value="Juhuria binti Bakri">Juhuria binti Bakri</option>
+                                <option value="Mohd Asrif bin Abd Samat">Mohd Asrif bin Abd Samat</option>
+                                <option value="Mohd Ali bin Abd Rahman">Mohd Ali bin Abd Rahman</option>
+                                <option value="Nazaratul Atikah binti Taslim Galli">Nazaratul Atikah binti Taslim Galli</option>
+                                <option value="Nor Ardhillah binti Najar">Nor Ardhillah binti Najar</option>
+                                <option value="Nordianshah bin Ami">Nordianshah bin Ami</option>
+                                <option value="Nurhati binti Ambotang">Nurhati binti Ambotang</option>
+                                <option value="Rafidah binti Abd Rahman">Rafidah binti Abd Rahman</option>
+                                <option value="Hjh Ratna binti Saliman">Hjh Ratna binti Saliman</option>
+                                <option value="Rusli bin Hasani">Rusli bin Hasani</option>
+                                <option value="Sianti binti Rahim">Sianti binti Rahim</option>
+                                <option value="Siew Chen@ Michelle Bibi">Siew Chen@ Michelle Bibi</option>
+                                <option value="Siti Noridah binti Kasran">Siti Noridah binti Kasran</option>
+                                <option value="Sudirman bin Yappa">Sudirman bin Yappa</option>
+                                <option value="Sulaiman bin Sabaktullah">Sulaiman bin Sabaktullah</option>
+                                <option value="Hjh Suriana binti Rauipong">Hjh Suriana binti Rauipong</option>
+                                <option value="Syamsul Bahri bin Sabaruddin">Syamsul Bahri bin Sabaruddin</option>
+                                <option value="Syed Abd Rahman bin Muhammad">Syed Abd Rahman bin Muhammad</option>
+                                <option value="Wan Nur Rohani binti Wan Idris">Wan Nur Rohani binti Wan Idris</option>
+                                <option value="Hasmiyani Emma">Hasmiyani Emma</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="class-name" class="block mb-2 text-sm font-medium text-sky-300">Kelas</label>
+                            <select id="class-name" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition" required>
+                                <option value="" disabled selected>Pilih Kelas</option>
+                                <option value="1 UKM">1 UKM</option>
+                                <option value="1 UMS">1 UMS</option>
+                                <option value="2 UKM">2 UKM</option>
+                                <option value="2 UMS">2 UMS</option>
+                                <option value="3 UKM">3 UKM</option>
+                                <option value="3 UMS">3 UMS</option>
+                                <option value="4 UKM">4 UKM</option>
+                                <option value="4 UMS">4 UMS</option>
+                                <option value="5 UKM">5 UKM</option>
+                                <option value="5 UMS">5 UMS</option>
+                                <option value="6 UKM">6 UKM</option>
+                                <option value="6 UMS">6 UMS</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="task-description" class="block mb-2 text-sm font-medium text-sky-300">Tugasan</label>
+                            <select id="task-description" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition" required>
+                                <option value="" disabled selected>Pilih Tugasan</option>
+                                <option value="Bahasa Melayu">Bahasa Melayu</option>
+                                <option value="Bahasa Inggeris">Bahasa Inggeris</option>
+                                <option value="Matematik">Matematik</option>
+                                <option value="Sains">Sains</option>
+                                <option value="Pendidikan Agama Islam">Pendidikan Agama Islam</option>
+                                <option value="RBT">RBT</option>
+                                <option value="Sejarah">Sejarah</option>
+                                <option value="Pendidikan Seni Visual">Pendidikan Seni Visual</option>
+                                <option value="Pendidikan Jasmani dan Kesihatan">Pendidikan Jasmani dan Kesihatan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="due-date" class="block mb-2 text-sm font-medium text-sky-300">Tarikh Hantar</label>
+                            <input type="date" id="due-date" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition" required>
+                        </div>
+                        <div class="md:col-span-2">
+                             <label for="task-details" class="block mb-2 text-sm font-medium text-sky-300">Perincian Tugasan (Pilihan)</label>
+                             <textarea id="task-details" rows="2" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition" placeholder="Contoh: Sila siapkan latihan di muka surat 55..."></textarea>
+                        </div>
+                        <button type="submit" class="w-full md:col-span-2 bg-sky-500 text-white font-bold py-3 px-4 rounded-lg action-button">
+                            Tambah Tugasan ✨
+                        </button>
+                    </form>
+                </div>
+        
+                <!-- Task List -->
+                <div id="task-list-container" class="glassmorphism p-6 rounded-2xl shadow-lg">
+                    <h2 id="task-list-header" class="text-2xl font-semibold mb-2 border-b-2 border-sky-500/30 pb-2 title-text">Senarai Tugasan</h2>
+                    <p id="student-welcome-message" class="hidden text-teal-300 mb-4"></p>
+                    <div id="task-list" class="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                        <!-- Task items will be dynamically inserted here -->
+                        <p id="empty-state" class="text-center text-gray-400 py-8">Memuatkan tugasan... ⏳</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Live Chat -->
+            <div class="lg:col-span-2 h-full">
+                <div id="chat-widget" class="glassmorphism rounded-2xl shadow-lg h-[calc(100vh-10rem)] flex flex-col relative">
+                     <h2 class="text-2xl font-semibold p-4 border-b-2 border-sky-500/30 title-text">Sembang Langsung 💬</h2>
+                     <div id="chat-body" class="p-4 space-y-3 overflow-y-auto flex-grow">
+                        <!-- Messages will appear here -->
+                     </div>
+                     <form id="chat-form" class="p-4 border-t border-sky-500/30 flex gap-2">
+                        <input type="text" id="chat-input" class="flex-grow bg-gray-800 border border-gray-600 rounded-lg p-2 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Taip mesej..." required disabled>
+                        <button type="submit" class="bg-sky-500 text-white font-bold py-2 px-4 rounded-lg action-button" disabled>Hantar</button>
+                     </form>
+                     <!-- Username Overlay -->
+                     <div id="username-overlay" class="absolute inset-0 bg-gray-800/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 rounded-2xl z-10">
+                         <h3 class="text-xl font-bold text-white mb-4">Sertai Sembang</h3>
+                         <p class="text-gray-300 text-center mb-6">Sila masukkan nama anda untuk mula bersembang.</p>
+                         <form id="username-form" class="w-full max-w-sm">
+                            <input type="text" id="username-input" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none mb-4" placeholder="Nama Anda" required>
+                            <button type="submit" class="w-full bg-sky-500 text-white font-bold py-3 px-4 rounded-lg action-button">Mula Sembang</button>
+                         </form>
+                     </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div class="glassmorphism rounded-2xl p-8 w-full max-w-md transform transition-all scale-95 opacity-0" id="modal-content">
+            <h3 class="text-2xl font-bold mb-4 title-text">Maklum Balas Guru 👨‍🏫</h3>
+            <div class="mb-4">
+                <p class="text-sm text-gray-400">Tugasan untuk Kelas:</p>
+                <p id="modal-class-name" class="font-semibold text-white"></p>
+                <p id="modal-task-description" class="text-sky-400"></p>
+                <p id="modal-task-details" class="text-sm text-gray-400 mt-1"></p>
+            </div>
+            <textarea id="feedback-text" rows="4" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition" placeholder="Tulis maklum balas di sini..."></textarea>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button id="close-modal-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition">Tutup</button>
+                <button id="save-feedback-btn" class="bg-sky-500 text-white font-bold py-2 px-6 rounded-lg action-button">Simpan</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- All JavaScript is now in ONE single module script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy, doc, deleteDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyCeCq8PYh8kzIbNukJSAwqO6550higYWZA",
+          authDomain: "mytaskmate-chat.firebaseapp.com",
+          projectId: "mytaskmate-chat",
+          storageBucket: "mytaskmate-chat.firebasestorage.app",
+          messagingSenderId: "975690337957",
+          appId: "1:975690337957:web:7f4ce15a5b5ecd293d874c",
+          measurementId: "G-C8F7865BMD"
+        };
+        
+        // --- Firebase Initialization ---
+        let db, auth;
+        let unsubscribeTasks; // To stop listening for tasks if needed
+        let allTasks = []; // A local cache of all tasks from Firestore
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e) {
+            console.error("Firebase initialization failed:", e);
+            document.getElementById('chat-widget').style.display = 'none';
+        }
+
+        // --- Main Application Logic (runs after DOM is loaded) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const homeBtn = document.getElementById('home-btn');
+            const taskFormContainer = document.getElementById('task-form-container');
+            const taskForm = document.getElementById('task-form');
+            const teacherNameInput = document.getElementById('teacher-name');
+            const classNameInput = document.getElementById('class-name');
+            const taskDescriptionInput = document.getElementById('task-description');
+            const dueDateInput = document.getElementById('due-date');
+            const taskDetailsInput = document.getElementById('task-details');
+            const taskList = document.getElementById('task-list');
+            const emptyState = document.getElementById('empty-state');
+            const taskListHeader = document.getElementById('task-list-header');
+            const studentWelcomeMessage = document.getElementById('student-welcome-message');
+
+            // Modal Elements
+            const feedbackModal = document.getElementById('feedback-modal');
+            const modalContent = document.getElementById('modal-content');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const saveFeedbackBtn = document.getElementById('save-feedback-btn');
+            const modalClassName = document.getElementById('modal-class-name');
+            const modalTaskDescription = document.getElementById('modal-task-description');
+            const modalTaskDetails = document.getElementById('modal-task-details');
+            const feedbackText = document.getElementById('feedback-text');
+            
+            // Role Selection Elements
+            const roleOverlay = document.getElementById('role-selection-overlay');
+            const guruBtn = document.getElementById('guru-btn');
+            const muridBtn = document.getElementById('murid-btn');
+            const teacherSelectionDiv = document.getElementById('teacher-selection-div');
+            const teacherLoginSelect = document.getElementById('teacher-login-select');
+            const teacherLoginBtn = document.getElementById('teacher-login-btn');
+            const studentSelectionDiv = document.getElementById('student-selection-div');
+            const studentLoginClassSelect = document.getElementById('student-login-class-select');
+            const studentNameLoginWrapper = document.getElementById('student-name-login-wrapper');
+            const studentLoginNameSelect = document.getElementById('student-login-name-select');
+            const studentLoginBtn = document.getElementById('student-login-btn');
+            const roleChoiceButtons = document.getElementById('role-choice-buttons');
+
+            // App state
+            let currentTaskData = null; // Store data for the modal
+            let userRole = sessionStorage.getItem('userRole');
+            let loggedInTeacherName = sessionStorage.getItem('loggedInTeacherName');
+            let loggedInStudentName = sessionStorage.getItem('loggedInStudentName');
+            let loggedInStudentClass = sessionStorage.getItem('loggedInStudentClass');
+
+             // Data for students
+            const studentsByClass = {
+                '1 UKM': ["AHMAD DZAWIN BIN TAJAP", "ANUM MARDIHA BINTI MALIK", "AULIA SALSABILA BINTI MOHD JAN", "IFFAH QURRATU AIN BINTI SARDIN", "MAYA ALISHA BINTI ABDULLAH", "MUHAMMAD MAHDI BIN MARZUKI", "MUHAMMAD RAHMAT SYAABAN BIN SURAHMAN", "MUHAMMAD SOBIRIN ALMUZAQQI BIN ABDUL RAHMAN", "MUHAMMAD SYAUQI SAIFUDDIN BIN SAHRIL", "NUR AAIRA AQEELA BINTI MOHD. ALI", "NUR AISYAH BATRISYA BINTI NORAMIANSHAH", "NUR QISYA ATIQAH BINTI SUGENG", "QIANDRA NURAFEYYAH RIZQIYYA BINTI MOHD SOFIYAN", "SITI NUR SAFIYYAH BINTI MUH NURABDUL MANSUR", "SYAHMI SYAFIQ BIN SUHAIME", "NUR ADELIA IZARA BINTI ANDY REMY IHSAN"],
+                '1 UMS': ["ANNUR MIKAYLA BINTI ABDULLAH", "ASSYAFIAH AMANIE BINTI MOHD ISHLAN", "HARRAZ BIN ASDAR", "IZZ FAIZ ANAQI BIN AZMAN", "MUHAMMAD AQIF AFIYAD BIN JAMALUDDIN", "MUHAMMAD NABIL NAIM BIN MASRAN", "MUHAMMAD RAWI BIN SUHARNO", "MUHAMMAD SYAFIQ AKMAL BIN ABDULLAH", "NUR AFFIYAH AMMANI BINTI ARDINATA", "NUR FAHDHILA AFIYAH BINTI ARSHAD", "NURUL HANAN NAZURAH BINTI HARTONO", "RASIEQAH QASEH BINTI AFZANIZAM AURICK", "SITI AISYAH RAMADHANI BINTI ABDULLAH", "SYAFIALYSHA ADELIA BINTI HINDRAH", "MUHAMMAD ZAWIR HANAN BIN JAMALI", "MUHAMMAD RAQIB BIN SABRI"],
+                '2 UKM': ["AINUL AALIYA BINTI PAESAL", "ANINDYA ZAHRA BINTI TAMBIRIN", "AYRA FARZANA SYIFA BINTI MUHAMMAD 'ARIF", "FAIQ HARRAZ ADRIAN BIN MOHAMMAD", "HARRAZ HAIZAN BIN HARYONO", "IFFAH ZAIYANI DELISHA BINTI SARDIN", "MOHAMMAD FAIZ ASYRAF BIN MOHD NOR FAZLY", "MOHAMMAD NORIKRAM BIN JIPRI", "MUHAJIRIN BIN MULIYADI", "MUHAMMAD ADEEB BIN MUHAMAD TAUFIK", "MUHAMMAD DAIYAN BIN ROMA", "MUHAMMAD FATIH ILMAN BIN JUSMAN", "MUHAMMAD SHAH KHUZAIRI BIN MOHD HASZREEN", "MUHAMMAD SYAQIF RIZQALLAH BIN MUSTARI", "NUR ALEEYA QAISARA BINTI JAMA", "NUR HANA HUMAIRA BINTI JAMALI", "NURUL ASYIKIN BINTI ASLAM", "SYATIR FAQIH BIN SUPARDI", "WAN SYED AHMAD BIN MULYAMAN", "MUHAMMAD LUHAIDAN BIN MOHD HASREE"],
+                '2 UMS': ["AHMAD WAIZ SOLIH BIN AHMAD JUBAEDI", "ASYA NAILA ADRIANNA BINTI ADY SUARNO", "DAYANG ALIA DELISHA BINTI GUNAIDI", "DAYANGKU ADZRA RAFA BINTI AG KU MARZUKI", "FELISYA ZAHRAH BINTI MD SYARAEP", "HAZMAN BIN ABDULLAH", "MARSHANDA BINTI ABDULLAH", "MOHAMAD SYAZLEESHAM FADZLY BIN SARIPUDDIN", "MOHAMMAD RIZQY RAMADHAN BIN MOHD AZIZI", "MOHAMMAD ZARUL ZAQUAN BIN ABDULLAH", "MUHAMMAD AKASYAH BIN MUHAMMAD AKIP", "MUHAMMAD AYMAN AKHTAR BIN MOHAMAD SOBRY", "MUHAMMAD DANIAL BIN MOHAMMAD AMIR", "MUHAMMAD FARHAN HISYAM BIN SUPARDI", "MUHAMMAD SYUQUR AIDAN BIN HAMSA", "NUR AZIATUL ADAWIA BINTI SABRI", "NUR FATHIYAH AMIRAH BINTI SARUDIN", "NUR NADIA FAIQAH BINTI MA'AROP", "NUR ZAHIRAH BINTI AMAT"],
+                '3 UKM': ["AHMAD HARRAS NAUFAL BIN AHMAD RAHIM", "ALIM NAUFAL BIN BACO", "ANIS ALISHA BINTI RIDWAN", "FAZLI BIN ABDUL HAIL", "IMAN FIRDAUS BIN ABDULLAH", "IZZ KHAYLA FAIQIHAH BINTI AZMAN", "JUWAIRIYAH BINTI TAJAP", "KHAIZURAN KHALDUN BIN ASRAN", "LUTHFIA ZAHRA BINTI TAMBIRIN", "MUHAMAD NAIM AZFAR BIN SAHARUDDIN", "MUHAMMAD ABHAR BIN BAHAR", "MUHAMMAD BAQIR QARIZH BIN HAZLI", "MUHAMMAD FARIZ BIN ADAM", "MUHAMMAD SOLEH BIN ABDUL RAHMAN", "MUHAMMAD SYAFIQ BIN HERMAN", "NUR ARIANA NADIRA BINTI MAIMULIADI", "NUR ZAFIRAH AZZAHRA BINTI JAMALI", "NURAFIENZAHRA NAZIHA", "NURHANA BINTI ABDULLAH", "PUTRI ARIANA BINTI NASRUN", "UMMU DAMIYAH BINTI SABRAN", "YUSSUF QARDHAWI BIN NORDIANSHAH"],
+                '3 UMS': ["ALISHA MAISARAH BINTI SUDIRMAN", "AMAL HAYY BIN MUSA", "AULIA IZZATUNNIISA ZAHRA BINTI ADY SUARNO", "FITRIYAH HASANAH BINTI SUKARMAN", "HAFIZAH DAIEYAH BINTI JULEAN", "MIMI FATIN BINTI RAMLI", "MOHAMMAD SYAFIQ SYAZWAN BIN BASLAN", "MUHAMAD RAYYAN ADZAN BIN AFZANIZAM AURICK", "MUHAMMAD AMMAR NAUFAL BIN ADDY ASMANDY", "MUHAMMAD FAYYADH ARRAYYAN BIN ABDULLAH", "MUHAMMAD FIRDAUS BIN ABDULLAH", "MUHAMMAD MAINAKA MUZAFFER BIN ABDULLAH", "NAJIEHA ANA BELLA BINTI JIPRI", "NUR AQISHA IKMAH BINTI ZARIS", "NUR FARISYAH AZWANIZ BINTI MOHD FAIRUL", "NUR NAJWA ASYILAH BINTI GIFFPIN", "NUR UMAIRAH BATRISYIA BINTI MUSTARI", "NURUL DALLIA ANIS BINTI HIRUDDIN", "RIZQAH NUR RAISHA BINTI SUTRISNO", "SITI NORSYAFIQAH NURAIN BINTI LAMASAH", "SITI QAMISYA BINTI MANSUR"],
+                '4 UMS': ["ARINI BINTI ARIFUDDIN", "ASSYIFATU HAIFA BINTI MOHD ISHLAN", "AWANGKU NAUFAL RIZQIN BIN AG KU MARZUKI", "AZHAR MUAZ BIN SUHARNO", "DIAN RAMADANI BINTI ABDU RASIT", "IZWANSYAH BIN SHUBANDRIO", "MOHAMMAD ADAM AIMAN SHAH BIN TAJUDDIN", "MUHAMMAD AQIL FAKHRULLAH BIN MUHAMAD TAUFIK", "MUHAMMAD DINIE LUTFIRAS BIN ASLAN", "MUHAMMAD FAZLIYANSYAH BIN MD SYARAEP", "MUHAMMAD KHALEEF BUKHARI BIN JIN JAAFAR", "MUHAMMAD MIRZA BUKHARI BIN MAHMUD", "MUHAMMAD RAIF NAUFAL BIN ZAIMAN", "MUHAMMAD ZAQWAN SAINI BIN RIDWAN", "NUR ALISHA SOFEA BINTI JAMA", "NUR IZZAHTUL BINTI KASIM", "NUR NADHIRAH BINTI MOHD RIZAL", "NUR NAZHATUL MARDHIAH BINTI MOHD ARMAN", "NUR QAISARA BINTI MESDI @ MASDI", "NUR SOFIYYA BINTI SENONG", "NUR SYUHADA BINTI JAAFAR", "NURKHAIRUNNISA BATRISYIA BINTI ABDULLAH", "PUTRI NUR IZZ ZAHIRAH BINTI YUSOF", "SYAFIE IDRAKI BIN SUPARDI"],
+                '4 UKM': ["ACHMAD ARSYAD SHOLIH BIN AHMAD JUBAEDI", "AHMAD AKMAL BIN ABDUL SALAM", "AQASH RAYYAN BIN ABDULLAH", "AYEESHA QASEH AFZAN BINTI ABDULLAH", "HAZLEN ARMEL AISYAH BINTI HENDRA", "MOHAMMAD FAUZI BIN FIRMAN", "MUHAMMAD FAHMI BIN ARBAIN", "MUHAMMAD HAIQAL BIN SUPARDI", "MUHAMMAD IZZHAR MUZAFFAR BIN SUKRI", "MUHAMMAD NOOR IKRAM BIN SABRI", "MUHAMMAD SHAYRIEL AFWAIZ BIN MOHD FAIRUL", "MUHAMMAD YUSUF FIRDAUS BIN HASSAN", "MUHAMMAD ZILL QAYYIM BIN RUSLEE", "NUR ADELIA ZAHRAH BINTI ABDULLAH", "NUR AISYAH NUHA BINTI SUGENG", "NUR ARISSA SAFFIYAH BINTI NORMANSAH", "NUR KHALISA RAMADHANI BINTI MOHD KAMIL", "NUR NASYRATUN MIKHAYLA BINTI MOHD. NASYRAH ASSOBAH", "NUR QALESYA SOFEA BINTI KAMARUL", "NUR RAUDHAH BAZLIAH BINTI MOHD PRIADI", "NUR SUHAINIE BINTI BAHARIN", "NURNADIYATUL YUSRA BINTI RUDI", "QALISHA SAFFIYAH BINTI IRMAN", "BALQISAH IRDINA BINTI ISMAIL"],
+                '5 UMS': ["AFIQ NAIM BIN ABD KADIR", "AHMAD DANISH BIN SABRIMANSHAH", "AHMAD QHOSIM SOLEH BIN AHMAD JUBAEDI", "AISYAH NABILA BINTI JUFRIDIN", "AKMAL BIN MUHAMMAD AZMI", "FARAH SYAKIRAH UMAYRAH BINTI ABDULLAH", "MIKAIL BIN ABDUL HAIL", "MOHAMMAD FARREL ADRIAN BIN KAMARUL", "MOHAMMAD ISYAMUDIN BIN JAIS", "MOHAMMAD SHAWAL BIN SUMARDI", "MUHAMMAD AMMAR UZAIR BIN MUHAMMAD AKIP", "MUHAMMAD AZHARI BIN ASRI", "MUHAMMAD FAHIM BIN RENE", "MUHAMMAD HAFIY ZAKWAN BIN ABDULLAH", "MUHAMMAD IRFAN NAUFAL BIN HERRY ERYWAN SHAH", "MUHAMMAD RIZQ RAYYAN BIN SUTRISNO", "NELLA DANISHA BINTI ROMA", "NUR AISYAH UMAIRAH BINTI AHMAD RAHIM", "NUR ALISHA BINTI MOHAMMAD AMIR", "NUR AQILAH BINTI ASRIP", "NUR NASIRA BINTI NASRUDDIN", "NUR QHARNIEZA YUSRAH BINTI MH YUSUP", "NURUL FATIHAH ADREANA BINTI MOHAMMAD", "QISYA HUMAIRAH BINTI PAESAL", "SYAFIRA BALQISYAH BINTI ABDULLAH"],
+                '5 UKM': ["ABDUL HAKIM BIN SUHARNO", "AMMAR ASYRAAF BIN PAESAL", "ANIQSAH ASYRAAF QAID BIN ASDIANSAH", "AULIA MAISARAH BINTI ASRAN", "KHAZANATUL SYUHAIZAH HAFIEYAH BINTI RUDI", "MOHAMMAD AQIL AIMAN BIN HERMAN", "MOHAMMAD NIZAM BIN AMAT", "MUHAMAD AZIM DANISH BIN HAZLAN", "MUHAMAD AZZIKRY BIN BURHAN", "MUHAMMAD AFHDAL BIN MAIMULIADI", "MUHAMMAD AQIL BIN JUFIKER", "MUHAMMAD BAZIL QAYYIM BIN HAZLI", "MUHAMMAD HAKIM BIN SABRI", "MUHAMMAD IZZUL HAQ BIN YUSOF", "NUR AIN AMANY BINTI MOHD NOR FAZLY", "NUR AISYAH BINTI ABDULLAH", "NUR ARNIA SHOLEHAH BINTI BAHAR", "NUR QALEESYA REDZUAN BINTI ABDULLAH", "NURUL FATIHAH BINTI ARUSIN", "NURUL NATASHA BINTI HIRUDDIN", "PUTERI ALIAA QISTINA DANIA BINTI ABIDIN", "QISTINA KHALISHAH BINTI HERMAN", "QISYA NAURAH AMMARA BINTI HERMKNG", "RAIHAN BIN RUZAIDI", "SARA ASSYFA BINTI ALIAS", "MUHAMMAD RAMADHAN SHAH BIN ABDULLAH"],
+                '6 UKM': ["ABDUL QAYYUM BIN MOHD KAMIL", "AIN ADIBAH BINTI MOHD NOR", "AIRITH RAYQAL BIN ZAIMAN", "AWANGKU ARYAN RAFIQI BIN AG KU MARZUKI", "IRDINA HUSNA BINTI SUKARMAN", "IZZ FIRASH RIZQIN BIN AZMAN", "JUMIATI BINTI TAJAP", "KEE ADIF SHAFIY BIN KEE HARMIMAZLIE", "LUQMAN BIN KASIM", "MOHAMMAD AZRUL BIN BAHARIN", "MUHAMAD TAQYUDDIN BIN MOHD EZAZI", "MUHAMMAD ASHRAF BIN MUHAMAD TAUFIK", "MUHAMMAD KHAIRUL FAHMIE BIN MOHD EDUWINSAH", "NOR HISYAM BIN JOKOSULISTIAWAN", "NUR DAMIA LUTFIYYAH BINTI MUH NURABDUL MANSUR", "NUR QASEH ALEYSSA BINTI MOHD RAZIF", "NUR QISSHA HANIE BINTI KISWADI", "NUR SYAZA MARDHIAH BINTI MOHD ARMAN", "NURUL HAZERA QALISYAH BINTI MOHD HAIREN", "SAFIYYAH SUHADA BINTI ABDULLAH", "SITI NUR UMAIRAH NAJWA BINTI SARUDIN", "SITI SUHAILA BINTI JIM", "SITI ZAHIRA BINTI ALIMUDDIN", "SUFFIAH BINTI YUSOP"],
+                '6 UMS': ["AIRITH RAYFAL BIN ZAIMAN", "ATIQAH BINTI ABDULLAH", "DZUL HANAFI BIN RAMLI", "FAHRISH AFNIZHAM BIN ARSHAD", "JUMADI BIN ABDULLAH", "MOHAMAD IKMAL BIN RENE", "MOHAMAD KHUZAIRIL BIN ZAMRI", "MOHAMMAD ALFIAN SYAPUTRA BIN ABDULLAH", "MOHAMMAD SYAWAL BIN RULAM", "MUHAMMAD AFIF HAMEEZAN BIN SUKRI", "MUHAMMAD AHNAF HELMIE BIN HENDRA", "MUHAMMAD ANIEF FIRDAUS BIN REZAL", "MUHAMMAD DANISH BIN ROMA", "MUHAMMAD FATHURRAHMAN BIN HERMAN", "MUHAMMAD FAYRUZ HILMI BIN MOHD FAIZAL", "MUHAMMAD SHARIZ DANNY BIN ABDULLAH", "NATASYAH NUR IZARA BINTI BAHTIAR", "NUR AISYAH SHAHNIZAH BINTI ARSAD", "NUR DINIE ZAFIRAH BINTI ASLAN", "NUR RAHMADIA BINTI JAAFAR", "NUR SYUHADAH BINTI DASIMUN", "NURUL HAFIZAH BINTI HASRUDDIN", "NURUL IZZAH SAFIYYAH BINTI ROSLI", "NURUL SHUHANA BINTI RAMLI", "SYAFIQA BINTI ABDULLAH", "ZARRA REEZQY DZUELAIQHA BINTI ROBIN"]
+            };
+
+            // --- Core Functions ---
+            const setupViewForRole = () => {
+                if (!userRole) {
+                    roleOverlay.classList.remove('hidden');
+                    homeBtn.classList.add('hidden');
+                } else {
+                    roleOverlay.style.display = 'none';
+                    homeBtn.classList.remove('hidden');
+                    if (userRole === 'murid') {
+                        taskFormContainer.style.display = 'none';
+                        taskListHeader.textContent = `Tugasan untuk Kelas ${loggedInStudentClass}`;
+                        studentWelcomeMessage.textContent = `Selamat datang, ${loggedInStudentName}! Sila tandakan tugasan yang telah selesai.`;
+                        studentWelcomeMessage.classList.remove('hidden');
+                    } else { // guru
+                        taskFormContainer.style.display = 'block';
+                        taskListHeader.textContent = 'Senarai Tugasan';
+                        studentWelcomeMessage.classList.add('hidden');
+                        if(loggedInTeacherName) {
+                            teacherNameInput.value = loggedInTeacherName;
+                            teacherNameInput.disabled = true;
+                        }
+                    }
+                    listenForTasks(); // Start listening for tasks from Firestore
+                }
+            };
+            
+            const renderTasks = (tasks) => {
+                let tasksToRender = tasks;
+                if (userRole === 'murid') {
+                    tasksToRender = tasks.filter(task => task.className === loggedInStudentClass);
+                }
+
+                taskList.innerHTML = ''; 
+
+                if (tasksToRender.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.textContent = userRole === 'murid' ? 'Tiada tugasan untuk kelas anda buat masa ini. 🎉' : 'Tiada tugasan lagi. Sila tambah tugasan baru. 📝';
+                } else {
+                    emptyState.classList.add('hidden');
+                    tasksToRender.forEach(task => {
+                        const isCompleteForThisStudent = userRole === 'murid' && loggedInStudentName && task.completedBy?.includes(loggedInStudentName);
+                        
+                        const taskElement = document.createElement('div');
+                        taskElement.className = `p-4 rounded-lg flex items-start gap-4 transition duration-300 shadow-sm ${isCompleteForThisStudent ? 'bg-gray-900/50 text-gray-500' : 'bg-gray-700/50'}`;
+                        taskElement.dataset.id = task.id;
+
+                        if(isCompleteForThisStudent) {
+                            taskElement.classList.add('task-item-completed');
+                        }
+
+                        const completionCount = task.completedBy?.length || 0;
+                        const teacherViewCompletionInfo = userRole === 'guru' ? `<p class="text-xs text-green-400 mt-1">${completionCount} murid telah siapkan.</p>` : '';
+
+                        const actionButtonsHTML = userRole === 'guru' ? `
+                            <div class="flex flex-col sm:flex-row gap-2 items-center">
+                                <button class="feedback-btn text-sm py-1 px-3 bg-green-600 hover:bg-green-500 text-white rounded-md transition w-full sm:w-auto">💬 Balas</button>
+                                <button class="delete-btn text-sm py-1 px-3 bg-red-600 hover:bg-red-500 text-white rounded-md transition w-full sm:w-auto">🗑️ Hapus</button>
+                            </div>
+                        ` : '';
+                        
+                        const checkboxState = userRole === 'guru' ? 'disabled' : '';
+
+                        taskElement.innerHTML = `
+                            <input type="checkbox" class="custom-checkbox mt-1.5 h-5 w-5 appearance-none rounded-md border-2 border-gray-500 transition cursor-pointer" ${isCompleteForThisStudent ? 'checked' : ''} ${checkboxState}>
+                            <div class="flex-grow">
+                                <p class="font-bold ${isCompleteForThisStudent ? '' : 'text-gray-100'}">Tugasan Kelas: <span class="text-xs font-medium bg-gray-600 text-sky-300 px-2 py-0.5 rounded-full">${task.className}</span></p>
+                                <p class="text-xs text-yellow-400 mt-1">Tarikh Hantar: ${new Date(task.dueDate).toLocaleDateString('ms-MY', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                                ${task.teacherName ? `<p class="text-xs text-gray-400 mt-1">Diberi oleh: ${task.teacherName}</p>` : ''}
+                                <p class="text-sky-400 task-text mt-2">${task.taskDescription}</p>
+                                ${task.taskDetails ? `<p class="text-sm text-gray-400 mt-1">${task.taskDetails}</p>` : ''}
+                                ${teacherViewCompletionInfo}
+                                ${task.feedback ? `
+                                <div class="mt-2 p-2 bg-green-900/50 border-l-2 border-green-700 rounded-r-md">
+                                    <p class="text-xs font-semibold text-green-300">Maklum Balas:</p>
+                                    <p class="text-sm text-gray-300 italic">"${task.feedback}"</p>
+                                </div>
+                                ` : ''}
+                            </div>
+                            ${actionButtonsHTML}
+                        `;
+                        taskList.appendChild(taskElement);
+                    });
+                }
+            };
+            
+            const addTask = async (teacherName, className, taskDescription, dueDate, taskDetails) => {
+                if (!db) { console.error("Firestore is not initialized!"); return; }
+                try {
+                    await addDoc(collection(db, 'tasks'), {
+                        teacherName, className, taskDescription, dueDate, taskDetails,
+                        completedBy: [], // Array to store names of students who completed
+                        feedback: '', 
+                        createdAt: serverTimestamp()
+                    });
+                } catch(e) { console.error("Error adding document: ", e); }
+            };
+
+            const toggleComplete = async (taskId, isCurrentlyComplete) => {
+                if (userRole !== 'murid' || !db || !loggedInStudentName) return;
+                try {
+                    const taskRef = doc(db, 'tasks', taskId);
+                    const updateAction = isCurrentlyComplete ? arrayRemove(loggedInStudentName) : arrayUnion(loggedInStudentName);
+                    await updateDoc(taskRef, { completedBy: updateAction });
+                } catch(e) { console.error("Error updating document: ", e); }
+            };
+
+            const deleteTask = async (taskId) => {
+                if (!db) return;
+                try {
+                    await deleteDoc(doc(db, 'tasks', taskId));
+                } catch(e) { console.error("Error deleting document: ", e); }
+            };
+            
+            const openFeedbackModal = (task) => {
+                currentTaskData = task;
+                modalClassName.textContent = task.className;
+                modalTaskDescription.textContent = task.taskDescription;
+                modalTaskDetails.textContent = task.taskDetails || '';
+                feedbackText.value = task.feedback || '';
+                feedbackModal.classList.remove('hidden');
+                setTimeout(() => { modalContent.classList.remove('scale-95', 'opacity-0'); }, 50);
+            };
+
+            const closeFeedbackModal = () => {
+                modalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => { feedbackModal.classList.add('hidden'); }, 300);
+            };
+
+            const saveFeedback = async () => {
+                if (currentTaskData && db) {
+                    try {
+                        const taskRef = doc(db, "tasks", currentTaskData.id);
+                        await updateDoc(taskRef, { feedback: feedbackText.value.trim() });
+                        closeFeedbackModal();
+                    } catch(e) { console.error("Error saving feedback: ", e); }
+                }
+            };
+
+            const listenForTasks = () => {
+                if (!db) return;
+                if (unsubscribeTasks) unsubscribeTasks();
+
+                const tasksRef = collection(db, 'tasks');
+                const q = query(tasksRef, orderBy("createdAt", "desc"));
+
+                unsubscribeTasks = onSnapshot(q, (snapshot) => {
+                    allTasks = [];
+                    snapshot.forEach(doc => {
+                        allTasks.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderTasks(allTasks);
+                });
+            };
+
+            // Event Listeners
+            homeBtn.addEventListener('click', () => {
+                sessionStorage.clear();
+                location.reload();
+            });
+
+            guruBtn.addEventListener('click', () => {
+                roleChoiceButtons.classList.add('hidden');
+                teacherSelectionDiv.classList.remove('hidden');
+            });
+
+            teacherLoginSelect.addEventListener('change', () => {
+                if(teacherLoginSelect.value) {
+                    teacherLoginBtn.disabled = false;
+                } else {
+                    teacherLoginBtn.disabled = true;
+                }
+            });
+
+            teacherLoginBtn.addEventListener('click', () => {
+                const selectedTeacher = teacherLoginSelect.value;
+                if(selectedTeacher) {
+                    userRole = 'guru';
+                    loggedInTeacherName = selectedTeacher;
+                    sessionStorage.setItem('userRole', 'guru');
+                    sessionStorage.setItem('loggedInTeacherName', loggedInTeacherName);
+                    sessionStorage.setItem('chatUsername', loggedInTeacherName);
+                    
+                    roleOverlay.classList.add('opacity-0');
+                    setTimeout(() => {
+                        setupViewForRole();
+                        if (auth.currentUser) {
+                            initChat(auth.currentUser, loggedInTeacherName);
+                        }
+                    }, 300);
+                }
+            });
+
+            muridBtn.addEventListener('click', () => {
+                roleChoiceButtons.classList.add('hidden');
+                studentSelectionDiv.classList.remove('hidden');
+            });
+
+            studentLoginClassSelect.addEventListener('change', () => {
+                const selectedClass = studentLoginClassSelect.value;
+                if (selectedClass) {
+                    const students = studentsByClass[selectedClass] || [];
+                    studentLoginNameSelect.innerHTML = '<option value="" disabled selected>-- Sila Pilih Nama --</option>';
+                    students.forEach(student => {
+                        const option = document.createElement('option');
+                        option.value = student;
+                        option.textContent = student;
+                        studentLoginNameSelect.appendChild(option);
+                    });
+                    studentNameLoginWrapper.classList.remove('hidden');
+                    studentLoginBtn.disabled = true;
+                } else {
+                    studentNameLoginWrapper.classList.add('hidden');
+                    studentLoginBtn.disabled = true;
+                }
+            });
+
+            studentLoginNameSelect.addEventListener('change', () => {
+                if (studentLoginNameSelect.value) {
+                    studentLoginBtn.disabled = false;
+                } else {
+                    studentLoginBtn.disabled = true;
+                }
+            });
+
+            studentLoginBtn.addEventListener('click', () => {
+                const selectedClass = studentLoginClassSelect.value;
+                const selectedStudent = studentLoginNameSelect.value;
+                if(selectedClass && selectedStudent) {
+                    userRole = 'murid';
+                    loggedInStudentClass = selectedClass;
+                    loggedInStudentName = selectedStudent;
+                    sessionStorage.setItem('userRole', 'murid');
+                    sessionStorage.setItem('loggedInStudentClass', loggedInStudentClass);
+                    sessionStorage.setItem('loggedInStudentName', loggedInStudentName);
+                    sessionStorage.setItem('chatUsername', loggedInStudentName); // Auto-set chat name
+                    
+                    roleOverlay.classList.add('opacity-0');
+                    setTimeout(() => {
+                        setupViewForRole();
+                        if (auth.currentUser) {
+                            initChat(auth.currentUser, loggedInStudentName);
+                        }
+                    }, 300);
+                }
+            });
+
+            taskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const teacherName = teacherNameInput.value.trim();
+                const className = classNameInput.value.trim();
+                const taskDesc = taskDescriptionInput.value.trim();
+                const dueDate = dueDateInput.value;
+                const taskDetails = taskDetailsInput.value.trim();
+                if (teacherName && className && taskDesc && dueDate) {
+                    addTask(teacherName, className, taskDesc, dueDate, taskDetails);
+                    taskForm.reset();
+                    // After reset, re-select the logged-in teacher's name
+                    if(loggedInTeacherName) {
+                        teacherNameInput.value = loggedInTeacherName;
+                    }
+                }
+            });
+
+            taskList.addEventListener('click', (e) => {
+                const target = e.target;
+                if(target.type === 'checkbox' && target.disabled) {
+                    return; 
+                }
+
+                const taskElement = target.closest('[data-id]');
+                if (!taskElement) return;
+                const taskId = taskElement.dataset.id;
+
+                if (target.type === 'checkbox' && userRole === 'murid') {
+                    const task = allTasks.find(t => t.id === taskId);
+                    if (task) {
+                        const isCompleteForStudent = loggedInStudentName && task.completedBy?.includes(loggedInStudentName);
+                        toggleComplete(taskId, isCompleteForStudent);
+                    }
+                }
+                
+                if(userRole === 'guru'){
+                    if (target.classList.contains('delete-btn')) {
+                        deleteTask(taskId);
+                    } else if (target.classList.contains('feedback-btn')) {
+                        const taskToEdit = allTasks.find(t => t.id === taskId);
+                        if(taskToEdit) openFeedbackModal(taskToEdit);
+                    }
+                }
+            });
+            closeModalBtn.addEventListener('click', closeFeedbackModal);
+            saveFeedbackBtn.addEventListener('click', saveFeedback);
+            feedbackModal.addEventListener('click', (e) => { if (e.target === feedbackModal) closeFeedbackModal(); });
+
+            // Initial setup
+            setupViewForRole();
+        });
+
+        // --- Chat Logic ---
+        const initChat = (user, username) => {
+            const chatForm = document.getElementById('chat-form');
+            const chatInput = document.getElementById('chat-input');
+            const chatBody = document.getElementById('chat-body');
+            const chatButton = chatForm.querySelector('button');
+            const usernameOverlay = document.getElementById('username-overlay');
+
+            // If a user is logged in (either student or teacher), don't show username prompt
+            if (sessionStorage.getItem('userRole')) {
+                 usernameOverlay.style.display = 'none';
+                 chatInput.disabled = false;
+                 chatButton.disabled = false;
+            } else { // Fallback for someone who enters chat without a role
+                 usernameOverlay.style.display = 'flex';
+                 chatInput.disabled = true;
+                 chatButton.disabled = true;
+            }
+
+
+            const messagesRef = collection(db, `chat_messages`);
+            const q = query(messagesRef, orderBy("timestamp", "desc"));
+            
+            onSnapshot(q, (snapshot) => {
+                const messages = [];
+                snapshot.forEach(doc => messages.push(doc.data()));
+                
+                chatBody.innerHTML = '';
+                messages.reverse().forEach(data => {
+                    const messageElement = document.createElement('div');
+                    const isSent = data.userId === user.uid;
+                    messageElement.className = `p-2 rounded-lg chat-message ${isSent ? 'sent' : 'received'}`;
+                    const senderName = isSent ? 'Anda' : (data.username || `Pengguna...${data.userId.substring(0, 5)}`);
+                    
+                    messageElement.innerHTML = `
+                        <p class="text-xs font-bold ${isSent ? 'text-sky-300' : 'text-gray-400'}">${senderName}</p>
+                        <p class="text-sm text-white break-words">${data.text}</p>
+                    `;
+                    chatBody.appendChild(messageElement);
+                });
+                chatBody.scrollTop = chatBody.scrollHeight;
+            });
+
+            chatForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const messageText = chatInput.value.trim();
+                const currentUsername = sessionStorage.getItem('chatUsername'); // Always use current username
+                if (messageText && user && currentUsername) {
+                    try {
+                        await addDoc(messagesRef, {
+                            text: messageText, userId: user.uid, username: currentUsername, timestamp: serverTimestamp()
+                        });
+                        chatInput.value = '';
+                    } catch (error) { console.error("Error sending message:", error); }
+                }
+            });
+        };
+
+        document.getElementById('username-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const usernameInput = document.getElementById('username-input');
+            const enteredName = usernameInput.value.trim();
+            if (enteredName && auth.currentUser) {
+                sessionStorage.setItem('chatUsername', enteredName);
+                initChat(auth.currentUser, enteredName);
+            }
+        });
+
+        if (auth) {
+            onAuthStateChanged(auth, async (user) => {
+                let chatUsername = sessionStorage.getItem('chatUsername');
+                if (user) {
+                    if (chatUsername) {
+                        initChat(user, chatUsername);
+                    }
+                } else {
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (error) { console.error("Authentication failed:", error); }
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
+
